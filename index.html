@@ -1,30 +1,137 @@
-<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="#">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://unpkg.com/vue@next"></script>
+    <link rel="shortcut icon" href="#">
     <title>Online Test PT. Indie Marketindo Ceria</title>
 </head>
-<body>
-    <div id="App">
-        <p>{{ message }}</p>
+
+<body class="bg-light text-dark">
+    <div class="container p-4 mt-5" id="App">
+        <h1 class="mb-4">IMAGE GALLERY</h1>
+        <div class="row " ref="dom">
+            <div class="col-md-4 col-12" v-for="(items,index) in result" :key="items.id">
+                <div class="card mb-4">
+                    <img :src="items.download_url" class="card-img-top" id="img" alt="image">
+                    <div class="card-body m-3">
+                        <h5>Dimension</h5>
+                        <p class="card-text"> Width : {{ items.width }}</p>
+                        <p class="card-text"> height : {{ items.height }}</p>
+                        <p class="card-text"> Author : {{ items.author }} </p>
+                        <a :href="items.url">Go to Site</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- <button type="button" v-on:click='plus'>Change</button> -->
+        <div ref="dom" id="scroll-triger">
+            <div v-if="loading === true" class="loader">
+            </div>
+        </div>
     </div>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
+</script>
 <script>
     const App = {
-        data(){
-            const message = ('llo')
-            return{
-                message
+        async mounted() {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight) {
+                    this.fetchAgain()
+                    this.loading=true
+                }
+            })
+            await this.fetchData(this.page)
+            await this.loadData(this.beforeResult, this.afterResult)
+        },
+        data() {
+            return {
+                item: [],
+                result: [],
+                dom: null,
+                beforeResult: 0,
+                afterResult: 9,
+                page: 1,
+                loading: false
+            }
+        },
+        computed: {},
+        methods: {
+            loadData(before, after) {
+                this.result.push(...this.item.slice(before, after))
+                this.loading=false
+            },
+            async fetchAgain() {
+                if (this.afterResult == 100){
+                    this.page+=1
+                    await this.fetchData(this.page)
+                    this.beforeResult=0
+                    this.afterResult=9
+                    this.loadData(this.beforeResult, this.afterResult)
+                }else{
+                this.beforeResult += 9
+                this.afterResult += 9
+                if (this.afterResult >= 100) {
+                    this.afterResult = 100
+                }
+                this.loadData(this.beforeResult, this.afterResult)
+                }
+            },
+            async fetchData(page) {
+                this.loading==true
+                await fetch('https://picsum.photos/v2/list?page=' + page + '&limit=100')
+                    .then((result) => result.json())
+                    .then(data => {
+                        this.item = data
+                        this.totalResult = data.length
+                    })
+                    .catch((err) => {
+                        console.log("bad")
+                    });
             }
         }
-        
     }
     Vue.createApp(App).mount('#App')
 </script>
-<script>
-</script>
+<style scoped>
+    #scroll-triger {
+        height: 80px;
+        padding-bottom: 30px;
+    }
+
+    #img {
+        width: auto;
+        height: 280px;
+        object-fit: cover;
+    }
+
+    .loader {
+        margin: 0 auto;
+        border: 5px solid #f3f3f3;
+        /* Light grey */
+        border-top: 5px solid #3498db;
+        /* Blue */
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
 </html>
